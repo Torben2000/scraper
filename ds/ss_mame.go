@@ -12,13 +12,14 @@ import (
 
 // SSMAME is the source for ScreenScraper
 type SSMAME struct {
-	Dev    ss.DevInfo
-	User   ss.UserInfo
-	Lang   []string
-	Region []string
-	Width  int
-	Height int
-	Limit  chan struct{}
+	Dev              ss.DevInfo
+	User             ss.UserInfo
+	Lang             []string
+	Region           []string
+	Width            int
+	Height           int
+	Limit            chan struct{}
+	NormalizedVideos bool
 }
 
 // GetName implements DS
@@ -80,6 +81,12 @@ func (s *SSMAME) GetGame(ctx context.Context, path string) (*Game, error) {
 	}
 	if vidURL := game.Media.Video; vidURL != "" {
 		if u, err := url.Parse(vidURL); err == nil {
+			if s.NormalizedVideos {
+				v := u.Query()
+				v.Set("media", "video-normalized")
+				u.RawQuery = v.Encode()
+				vidURL = u.String()
+			}
 			ext := u.Query().Get("mediaformat")
 			ret.Videos[VidStandard] = HTTPVideoSS{vidURL, "." + ext, s.Limit}
 		}
